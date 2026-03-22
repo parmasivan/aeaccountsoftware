@@ -2,52 +2,43 @@
 
 இது Xerox shop / printout center / lamination / photo frame / spiral binding / mobile accessories shop க்கு ஒரு practical PHP accounts project.
 
-## இப்போ என்னென்ன இருக்கு?
+## Main features
 
-- Frontend dashboard (`public/index.php`)
+- Login system with separate **admin page** and **user page**
+- Admin மட்டும் product, price, stock master maintain பண்ணலாம்
+- User counter page-ல் daily sale / service / expense entries add பண்ணலாம்
+- Frontend dashboard (`public/`)
 - Backend business logic (`src/`)
 - JSON API (`public/api.php`)
-- SQLite **அல்லது** MySQL / phpMyAdmin database use பண்ணலாம்
-- Product master add பண்ணலாம்
-- Daily sale / service / stock purchase entry add பண்ணலாம்
-- Shop expense add பண்ணலாம்
-- Customer name, payment mode, bill number save பண்ணலாம்
-- Low stock alert பார்க்கலாம்
-- Income / expense / purchase ledger பார்க்கலாம்
-- Today net / month net summary பார்க்கலாம்
+- SQLite **அல்லது** MySQL / phpMyAdmin database support
+- Low stock alert, ledger, income/expense summary
 
-## Project structure
+## Default login
 
-- `public/index.php` - full dashboard UI + fetch calls
-- `public/api.php` - API endpoints
+- **Admin login:** `admin` / `admin123`
+- **User login:** `staff` / `user123`
+
+## Pages
+
+- `public/index.php` - login page
+- `public/admin.php` - admin dashboard
+- `public/user.php` - user dashboard
+
+## Database support
+
 - `src/Database.php` - SQLite / MySQL setup, migration, seed
-- `src/ShopRepository.php` - backend account logic
 - `config/database.php` - database config loader
 - `database/mysql_schema.sql` - phpMyAdmin import SQL file
 - `storage/data.sqlite` - generated SQLite file (SQLite mode மட்டும்)
 
-## Run locally with SQLite
-
-```bash
-php -S 127.0.0.1:8000 -t public
-```
-
-பிறகு browser-ல் open பண்ணவும்:
-
-- `http://127.0.0.1:8000`
-
 ## phpMyAdmin / MySQL database add பண்ணுவது எப்படி?
-
-### Method 1: phpMyAdmin-ல் database create பண்ணி project connect பண்ணுவது
 
 1. XAMPP / WAMP / Laragon start பண்ணவும்.
 2. Browser-ல் `http://localhost/phpmyadmin` open பண்ணவும்.
-3. **New** click பண்ணவும்.
-4. Database name-ஆ `ae_accounts` enter பண்ணவும்.
-5. Collation-ஆ `utf8mb4_unicode_ci` select பண்ணவும்.
-6. **Create** click பண்ணவும்.
-7. Project root-ல் `.env.example`-ஐ copy பண்ணி `.env` create பண்ணவும்.
-8. `.env` file-ல் இந்த values set பண்ணவும்:
+3. **New** click பண்ணி `ae_accounts` என்ற database create பண்ணவும்.
+4. Collation `utf8mb4_unicode_ci` select பண்ணவும்.
+5. `.env.example` file-ஐ copy பண்ணி `.env` create பண்ணவும்.
+6. `.env` file-ல் கீழே உள்ள values set பண்ணவும்:
 
 ```env
 DB_CONNECTION=mysql
@@ -58,97 +49,38 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-9. இப்போ project run பண்ணவும்:
+7. விருப்பமிருந்தால் phpMyAdmin-ல் `database/mysql_schema.sql` file import பண்ணலாம்.
+8. பிறகு project run பண்ணவும்:
 
 ```bash
 php -S 127.0.0.1:8000 -t public
 ```
 
-10. First request வந்தவுடன் app MySQL database-க்கு connect ஆகி tables create பண்ணும்.
+9. Login page open பண்ணவும்:
 
-### Method 2: phpMyAdmin Import use பண்ணுவது
+- `http://127.0.0.1:8000`
 
-1. phpMyAdmin-ல் `ae_accounts` database open பண்ணவும்.
-2. **Import** tab-க்கு போங்க.
-3. இந்த file select பண்ணவும்:
+## SQLite mode run
 
-- `database/mysql_schema.sql`
-
-4. **Go** click பண்ணவும்.
-5. அதன் பிறகு `.env` file-ல் MySQL settings set பண்ணி app run பண்ணவும்.
-
-## Important files for MySQL setup
-
-- `.env.example` - sample MySQL config
-- `config/database.php` - app எந்த database use பண்ணணும் என்று decide பண்ணும் file
-- `src/bootstrap.php` - `.env` load பண்ணும் file
-- `src/Database.php` - SQLite / MySQL connect + migrate + seed logic
-- `database/mysql_schema.sql` - phpMyAdmin import file
-
-## API endpoints
-
-### Dashboard
+`.env` இல்லாமலே run பண்ணினால் app SQLite use பண்ணும்:
 
 ```bash
-curl http://127.0.0.1:8000/api.php?path=dashboard
+php -S 127.0.0.1:8000 -t public
 ```
 
-### Ledger மட்டும் பார்க்க
+## Important API endpoints
 
-```bash
-curl http://127.0.0.1:8000/api.php?path=ledger
-```
+- `POST /api.php?path=login`
+- `POST /api.php?path=logout`
+- `GET /api.php?path=me`
+- `GET /api.php?path=dashboard`
+- `GET /api.php?path=ledger`
+- `POST /api.php?path=products` (**admin only**)
+- `POST /api.php?path=transactions`
+- `POST /api.php?path=expenses`
 
-### Product add
+## Notes
 
-```bash
-curl -X POST http://127.0.0.1:8000/api.php?path=products \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "USB Cable",
-    "category": "Mobile Accessories",
-    "unit": "piece",
-    "sell_price": 120,
-    "stock": 20,
-    "reorder_level": 5
-  }'
-```
-
-### Daily sale / service / purchase add
-
-```bash
-curl -X POST http://127.0.0.1:8000/api.php?path=transactions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "product_id": 1,
-    "type": "sale",
-    "quantity": 10,
-    "amount": 20,
-    "customer_name": "Walk-in customer",
-    "payment_mode": "cash",
-    "bill_no": "BILL-2001",
-    "note": "Xerox counter sale"
-  }'
-```
-
-### Expense add
-
-```bash
-curl -X POST http://127.0.0.1:8000/api.php?path=expenses \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Internet Bill",
-    "category": "Utilities",
-    "amount": 899,
-    "payment_mode": "upi",
-    "note": "Monthly broadband"
-  }'
-```
-
-## Next improvements
-
-- Login / user management
-- Customer pending balance
-- Supplier ledger
-- Invoice / print bill
-- GST report / export
+- Admin மட்டும் product மற்றும் price add/update பண்ண வேண்டும்.
+- User page-ல் product list read-only.
+- Seed data முதல் run-ல் auto insert ஆகும்.

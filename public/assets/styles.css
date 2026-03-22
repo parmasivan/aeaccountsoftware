@@ -10,7 +10,6 @@
     --danger: #dc2626;
     --success: #15803d;
     --danger-bg: #fff1f2;
-    --success-bg: #f0fdf4;
 }
 
 * {
@@ -22,6 +21,33 @@ body {
     font-family: Inter, Arial, sans-serif;
     background: linear-gradient(180deg, #ecf3ff 0%, var(--bg) 40%);
     color: var(--text);
+}
+
+.auth-body {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.auth-shell {
+    width: min(100%, 460px);
+}
+
+.auth-card,
+.hero-card,
+.panel,
+.stat-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+}
+
+.auth-card,
+.hero-card,
+.panel {
+    padding: 24px;
 }
 
 .page {
@@ -44,7 +70,7 @@ body {
 }
 
 .grid-2 {
-    grid-template-columns: 1.5fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .grid-3 {
@@ -76,20 +102,6 @@ p {
 .muted,
 .empty-state {
     color: var(--muted);
-}
-
-.hero-card,
-.panel,
-.stat-card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
-}
-
-.hero-card,
-.panel {
-    padding: 20px;
 }
 
 .stats {
@@ -170,7 +182,8 @@ button:hover {
     opacity: 0.95;
 }
 
-.list-card {
+.list-card,
+.credential-box {
     padding: 14px;
     border: 1px solid var(--border);
     border-radius: 16px;

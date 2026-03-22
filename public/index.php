@@ -1,293 +1,61 @@
 <?php
 
 declare(strict_types=1);
+
+require_once __DIR__ . '/../src/bootstrap.php';
+
+$user = currentUser();
+if ($user !== null) {
+    header('Location: ' . ($user['role'] === 'admin' ? '/admin.php' : '/user.php'));
+    exit;
+}
 ?><!DOCTYPE html>
 <html lang="ta">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AE Accounts - Daily Shop Accounts</title>
+    <title>AE Accounts Login</title>
     <link rel="stylesheet" href="assets/styles.css">
 </head>
-<body>
-    <div class="page">
-        <header class="hero">
-            <div>
-                <p class="badge">PHP + SQLite + Frontend + Backend + API</p>
-                <h1>Daily Accounts Dashboard for Xerox Shop</h1>
-                <p class="lead">இப்போ project product master மட்டும் இல்ல. Daily sale, service, stock purchase, shop expense, customer name, payment mode, bill number, low stock alert, ledger entry எல்லாம் handle பண்ணும் மாதிரி update பண்ணப்பட்டுள்ளது.</p>
-            </div>
-            <div class="hero-card">
-                <h2>Available API</h2>
-                <ul>
-                    <li><code>GET /api.php?path=dashboard</code></li>
-                    <li><code>GET /api.php?path=ledger</code></li>
-                    <li><code>POST /api.php?path=transactions</code></li>
-                    <li><code>POST /api.php?path=expenses</code></li>
-                    <li><code>POST /api.php?path=products</code></li>
-                </ul>
-            </div>
-        </header>
+<body class="auth-body">
+    <main class="auth-shell">
+        <section class="auth-card">
+            <p class="badge">AE Accounts Login</p>
+            <h1>Admin / User Login</h1>
+            <p class="lead">Admin product, price, stock master maintain பண்ணுவார். User தினசரி sales/service/expense entry மட்டும் செய்வார்.</p>
 
-        <section class="stats" id="summaryCards"></section>
+            <form id="loginForm" class="form-grid top-gap">
+                <input name="username" placeholder="Username" required>
+                <input name="password" type="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
 
-        <section class="grid grid-3">
-            <div class="panel span-2">
-                <div class="panel-head">
-                    <h2>Daily Income / Purchase Entry</h2>
-                    <span class="muted">Sale / Service / Stock Purchase</span>
-                </div>
-                <form id="transactionForm" class="form-grid cols-3">
-                    <select name="product_id" id="productSelect">
-                        <option value="">Select product (optional)</option>
-                    </select>
-                    <input name="item_name" placeholder="Or type item name">
-                    <input name="category" placeholder="Category / service type">
-                    <select name="type" required>
-                        <option value="sale">Sale</option>
-                        <option value="service">Service</option>
-                        <option value="purchase">Stock Purchase</option>
-                    </select>
-                    <input name="quantity" type="number" min="1" step="1" placeholder="Quantity" required>
-                    <input name="amount" type="number" min="0" step="0.01" placeholder="Amount" required>
-                    <input name="customer_name" placeholder="Customer / supplier name">
-                    <select name="payment_mode">
-                        <option value="cash">Cash</option>
-                        <option value="upi">UPI</option>
-                        <option value="card">Card</option>
-                        <option value="bank">Bank</option>
-                    </select>
-                    <input name="bill_no" placeholder="Bill number">
-                    <input name="note" class="span-2" placeholder="Notes">
-                    <button type="submit">Save Account Entry</button>
-                </form>
-            </div>
-
-            <div class="panel">
-                <div class="panel-head">
-                    <h2>Shop Expense</h2>
-                    <span class="muted">Rent / EB / Salary / Misc</span>
-                </div>
-                <form id="expenseForm" class="form-grid">
-                    <input name="title" placeholder="Expense title" required>
-                    <input name="category" placeholder="Expense category" required>
-                    <input name="amount" type="number" min="0" step="0.01" placeholder="Amount" required>
-                    <select name="payment_mode" required>
-                        <option value="cash">Cash</option>
-                        <option value="upi">UPI</option>
-                        <option value="card">Card</option>
-                        <option value="bank">Bank</option>
-                    </select>
-                    <input name="note" placeholder="Note">
-                    <button type="submit" class="secondary">Save Expense</button>
-                </form>
+            <div class="credential-box top-gap">
+                <h2>Default Login</h2>
+                <p><strong>Admin:</strong> admin / admin123</p>
+                <p><strong>User:</strong> staff / user123</p>
             </div>
         </section>
-
-        <section class="grid grid-2">
-            <div class="panel">
-                <div class="panel-head">
-                    <h2>Product Master</h2>
-                    <span class="muted">Item list + reorder level</span>
-                </div>
-                <form id="productForm" class="form-grid cols-2 compact-form">
-                    <input name="name" placeholder="Product name" required>
-                    <input name="category" placeholder="Category" required>
-                    <input name="unit" placeholder="Unit (piece/pages/book)" required>
-                    <input name="sell_price" type="number" min="0" step="0.01" placeholder="Sell price" required>
-                    <input name="stock" type="number" min="0" step="1" placeholder="Opening stock" required>
-                    <input name="reorder_level" type="number" min="0" step="1" placeholder="Reorder level">
-                    <button type="submit" class="span-2">Save Product</button>
-                </form>
-                <div class="table-wrap top-gap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Item</th>
-                                <th>Category</th>
-                                <th>Stock</th>
-                                <th>Reorder</th>
-                                <th>Price</th>
-                            </tr>
-                        </thead>
-                        <tbody id="productsTable"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="panel">
-                <div class="panel-head">
-                    <h2>Low Stock + Recent Expenses</h2>
-                    <span class="muted">Action items</span>
-                </div>
-                <div id="lowStockList" class="stack-list"></div>
-                <hr>
-                <div id="expensesList" class="stack-list"></div>
-            </div>
-        </section>
-
-        <section class="panel top-gap-lg">
-            <div class="panel-head">
-                <h2>Account Ledger</h2>
-                <span class="muted">Income / Expense / Inventory purchase</span>
-            </div>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Entry</th>
-                            <th>Title</th>
-                            <th>Category</th>
-                            <th>Party</th>
-                            <th>Payment</th>
-                            <th>Bill</th>
-                            <th>Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ledgerTable"></tbody>
-                </table>
-            </div>
-        </section>
-    </div>
+    </main>
 
     <script>
-        const urls = {
-            dashboard: './api.php?path=dashboard',
-            products: './api.php?path=products',
-            transactions: './api.php?path=transactions',
-            expenses: './api.php?path=expenses',
-        };
+        document.getElementById('loginForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
 
-        const formatCurrency = (value) => new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            maximumFractionDigits: 2,
-        }).format(Number(value || 0));
-
-        async function request(url, options = {}) {
-            const response = await fetch(url, {
+            const response = await fetch('./api.php?path=login', {
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                ...options,
+                body: JSON.stringify(payload),
             });
+
             const data = await response.json();
             if (!response.ok) {
-                throw new Error(data.error || 'Something went wrong');
+                alert(data.error || 'Login failed');
+                return;
             }
-            return data;
-        }
 
-        function renderSummary(summary) {
-            const items = [
-                ['Products', summary.product_count],
-                ['Today Income', formatCurrency(summary.today_income)],
-                ['Today Expense', formatCurrency(summary.today_expense)],
-                ['Today Net', formatCurrency(summary.today_net)],
-                ['Month Net', formatCurrency(summary.month_net)],
-                ['Stock Value', formatCurrency(summary.stock_value)],
-                ['Low Stock Items', summary.low_stock_count],
-            ];
-
-            document.getElementById('summaryCards').innerHTML = items.map(([label, value]) => `
-                <article class="stat-card">
-                    <p>${label}</p>
-                    <h3>${value}</h3>
-                </article>
-            `).join('');
-        }
-
-        function renderProducts(products) {
-            document.getElementById('productsTable').innerHTML = products.map((product) => {
-                const rowClass = Number(product.stock) <= Number(product.reorder_level) ? 'warn-row' : '';
-                return `
-                    <tr class="${rowClass}">
-                        <td>${product.name}</td>
-                        <td>${product.category}</td>
-                        <td>${product.stock} ${product.unit}</td>
-                        <td>${product.reorder_level}</td>
-                        <td>${formatCurrency(product.sell_price)}</td>
-                    </tr>
-                `;
-            }).join('');
-
-            document.getElementById('productSelect').innerHTML = ['<option value="">Select product (optional)</option>'].concat(
-                products.map((product) => `<option value="${product.id}">${product.name} (${product.stock})</option>`)
-            ).join('');
-
-            const lowStock = products.filter((product) => Number(product.stock) <= Number(product.reorder_level));
-            document.getElementById('lowStockList').innerHTML = lowStock.length
-                ? lowStock.map((product) => `
-                    <article class="list-card danger">
-                        <strong>${product.name}</strong>
-                        <p>${product.category} • Stock ${product.stock} / Reorder ${product.reorder_level}</p>
-                    </article>
-                `).join('')
-                : '<p class="empty-state">No low stock items.</p>';
-        }
-
-        function renderExpenses(expenses) {
-            document.getElementById('expensesList').innerHTML = expenses.length
-                ? expenses.map((expense) => `
-                    <article class="list-card">
-                        <strong>${expense.title}</strong>
-                        <p>${expense.category} • ${expense.payment_mode?.toUpperCase() || '-'} • ${formatCurrency(expense.amount)}</p>
-                    </article>
-                `).join('')
-                : '<p class="empty-state">No expenses yet.</p>';
-        }
-
-        function renderLedger(entries) {
-            document.getElementById('ledgerTable').innerHTML = entries.map((entry) => {
-                const amountClass = Number(entry.amount) < 0 ? 'amount-out' : 'amount-in';
-                return `
-                    <tr>
-                        <td>${new Date(entry.created_at).toLocaleString('en-IN')}</td>
-                        <td>${entry.entry_type.toUpperCase()}</td>
-                        <td>${entry.title}</td>
-                        <td>${entry.category}</td>
-                        <td>${entry.party_name || '-'}</td>
-                        <td>${entry.payment_mode ? entry.payment_mode.toUpperCase() : '-'}</td>
-                        <td>${entry.bill_no || '-'}</td>
-                        <td class="${amountClass}">${formatCurrency(entry.amount)}</td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        async function loadDashboard() {
-            const data = await request(urls.dashboard);
-            renderSummary(data.summary);
-            renderProducts(data.products);
-            renderExpenses(data.expenses);
-            renderLedger(data.ledger);
-        }
-
-        document.getElementById('productForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
-            await request(urls.products, { method: 'POST', body: JSON.stringify(payload) });
-            event.currentTarget.reset();
-            await loadDashboard();
-        });
-
-        document.getElementById('transactionForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
-            await request(urls.transactions, { method: 'POST', body: JSON.stringify(payload) });
-            event.currentTarget.reset();
-            await loadDashboard();
-        });
-
-        document.getElementById('expenseForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
-            await request(urls.expenses, { method: 'POST', body: JSON.stringify(payload) });
-            event.currentTarget.reset();
-            await loadDashboard();
-        });
-
-        loadDashboard().catch((error) => {
-            alert(error.message);
+            window.location.href = data.user.role === 'admin' ? './admin.php' : './user.php';
         });
     </script>
 </body>

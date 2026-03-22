@@ -95,6 +95,17 @@ final class Database
     private function migrateSqlite(): void
     {
         $this->pdo->exec(
+            'CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                full_name TEXT NOT NULL,
+                username TEXT NOT NULL UNIQUE,
+                password_hash TEXT NOT NULL,
+                role TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )'
+        );
+
+        $this->pdo->exec(
             'CREATE TABLE IF NOT EXISTS products (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
@@ -166,6 +177,30 @@ final class Database
 
     private function seed(): void
     {
+        $userCount = (int) $this->pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
+        if ($userCount === 0) {
+            $insertUser = $this->pdo->prepare(
+                'INSERT INTO users (full_name, username, password_hash, role, created_at)
+                 VALUES (:full_name, :username, :password_hash, :role, :created_at)'
+            );
+
+            $now = $this->currentTimestamp();
+            $users = [
+                ['Administrator', 'admin', password_hash('admin123', PASSWORD_DEFAULT), 'admin'],
+                ['Counter Staff', 'staff', password_hash('user123', PASSWORD_DEFAULT), 'user'],
+            ];
+
+            foreach ($users as [$fullName, $username, $passwordHash, $role]) {
+                $insertUser->execute([
+                    ':full_name' => $fullName,
+                    ':username' => $username,
+                    ':password_hash' => $passwordHash,
+                    ':role' => $role,
+                    ':created_at' => $now,
+                ]);
+            }
+        }
+
         $productCount = (int) $this->pdo->query('SELECT COUNT(*) FROM products')->fetchColumn();
         if ($productCount === 0) {
             $products = [

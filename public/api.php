@@ -29,6 +29,11 @@ try {
         exit;
     }
 
+    if ($method === 'GET' && $path === 'ledger') {
+        echo json_encode(['ledger' => $repository->ledger()], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     $payload = json_decode((string) file_get_contents('php://input'), true, 512, JSON_THROW_ON_ERROR);
 
     if ($method === 'POST' && $path === 'products') {
@@ -40,6 +45,12 @@ try {
     if ($method === 'POST' && $path === 'transactions') {
         http_response_code(201);
         echo json_encode(['transaction' => $repository->createTransaction($payload)], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if ($method === 'POST' && $path === 'expenses') {
+        http_response_code(201);
+        echo json_encode(['expense' => $repository->createExpense($payload)], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
         exit;
     }
 
